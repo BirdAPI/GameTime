@@ -5,7 +5,7 @@ CherryPy users
 
 You can profile any of your pages as follows:
 
-    from cherrypy.lib import profile
+    from cherrypy.lib import profiler
     
     class Root:
         p = profile.Profiler("/path/to/profile/dir")
@@ -17,15 +17,19 @@ You can profile any of your pages as follows:
         def _index(self):
             return "Hello, world!"
     
-    cherrypy.root = Root()
+    cherrypy.tree.mount(Root())
+
+
+You can also turn on profiling for all requests
+using the make_app function as WSGI middleware.
 
 
 CherryPy developers
 ===================
 
-This module can be used whenever you make changes to CherryPy, to get a
-quick sanity-check on overall CP performance. Set the config entry:
-"profiling.on = True" to turn on profiling. Then, use the serve()
+This module can be used whenever you make changes to CherryPy,
+to get a quick sanity-check on overall CP performance. Use the
+"--profile" flag when running the test suite. Then, use the serve()
 function to browse the results in a web browser. If you run this
 module from the command line, it will call serve() for you.
 
@@ -46,21 +50,17 @@ try:
 except ImportError:
     profile = None
     pstats = None
-    import warnings
-    msg = ("Your installation of Python doesn't have a profile module. "
-           "If you're on Debian, you can apt-get python2.4-profiler from "
-           "non-free in a separate step. See http://www.cherrypy.org/wiki/"
-           "ProfilingOnDebian for details.")
-    warnings.warn(msg)
 
 import os, os.path
 import sys
+import warnings
 
 try:
-    import cStringIO as StringIO
+    from cStringIO import StringIO
 except ImportError:
-    import StringIO
+    from StringIO import StringIO
 
+_count = 0
 
 class Profiler(object):
     
@@ -70,15 +70,16 @@ class Profiler(object):
         self.path = path
         if not os.path.exists(path):
             os.makedirs(path)
-        self.count = 0
     
-    def run(self, func, *args):
-        """run(func, *args). Run func, dumping profile data into self.path."""
-        self.count += 1
-        path = os.path.join(self.path, "cp_%04d.prof" % self.count)
+    def run(self, func, *args, **params):
+        """Dump profile data into self.path."""
+        global _count
+        c = _count = _count + 1
+        path = os.path.join(self.path, "cp_%04d.prof" % c)
         prof = profile.Profile()
-        prof.runcall(func, *args)
+        result = prof.runcall(func, *args, **params)
         prof.dump_stats(path)
+        return result
     
     def statfiles(self):
         """statfiles() -> list of available profiles."""
@@ -87,15 +88,24 @@ class Profiler(object):
     
     def stats(self, filename, sortby='cumulative'):
         """stats(index) -> output of print_stats() for the given profile."""
-        s = pstats.Stats(os.path.join(self.path, filename))
-        s.strip_dirs()
-        s.sort_stats(sortby)
-        oldout = sys.stdout
-        try:
-            sys.stdout = sio = StringIO.StringIO()
+        sio = StringIO()
+        if sys.version_info >= (2, 5):
+            s = pstats.Stats(os.path.join(self.path, filename), stream=sio)
+            s.strip_dirs()
+            s.sort_stats(sortby)
             s.print_stats()
-        finally:
-            sys.stdout = oldout
+        else:
+            # pstats.Stats before Python 2.5 didn't take a 'stream' arg,
+            # but just printed to stdout. So re-route stdout.
+            s = pstats.Stats(os.path.join(self.path, filename))
+            s.strip_dirs()
+            s.sort_stats(sortby)
+            oldout = sys.stdout
+            try:
+                sys.stdout = sio
+                s.print_stats()
+            finally:
+                sys.stdout = oldout
         response = sio.getvalue()
         sio.close()
         return response
@@ -127,15 +137,67 @@ class Profiler(object):
     report.exposed = True
 
 
+class ProfileAggregator(Profiler):
+    
+    def __init__(self, path=None):
+        Profiler.__init__(self, path)
+        global _count
+        self.count = _count = _count + 1
+        self.profiler = profile.Profile()
+    
+    def run(self, func, *args):
+        path = os.path.join(self.path, "cp_%04d.prof" % self.count)
+        result = self.profiler.runcall(func, *args)
+        self.profiler.dump_stats(path)
+        return result
+
+
+class make_app:
+    def __init__(self, nextapp, path=None, aggregate=False):
+        """Make a WSGI middleware app which wraps 'nextapp' with profiling.
+        
+        nextapp: the WSGI application to wrap, usually an instance of
+            cherrypy.Application.
+        path: where to dump the profiling output.
+        aggregate: if True, profile data for all HTTP requests will go in
+            a single file. If False (the default), each HTTP request will
+            dump its profile data into a separate file.
+        """
+        if profile is None or pstats is None:
+            msg = ("Your installation of Python does not have a profile module. "
+                   "If you're on Debian, try `sudo apt-get install python-profiler`. "
+                   "See http://www.cherrypy.org/wiki/ProfilingOnDebian for details.")
+            warnings.warn(msg)
+        
+        self.nextapp = nextapp
+        self.aggregate = aggregate
+        if aggregate:
+            self.profiler = ProfileAggregator(path)
+        else:
+            self.profiler = Profiler(path)
+    
+    def __call__(self, environ, start_response):
+        def gather():
+            result = []
+            for line in self.nextapp(environ, start_response):
+                result.append(line)
+            return result
+        return self.profiler.run(gather)
+
+
 def serve(path=None, port=8080):
+    if profile is None or pstats is None:
+        msg = ("Your installation of Python does not have a profile module. "
+               "If you're on Debian, try `sudo apt-get install python-profiler`. "
+               "See http://www.cherrypy.org/wiki/ProfilingOnDebian for details.")
+        warnings.warn(msg)
+    
     import cherrypy
-    cherrypy.root = Profiler(path)
     cherrypy.config.update({'server.socket_port': int(port),
                             'server.thread_pool': 10,
-                            'server.environment': "production",
-                            'session.storageType': "ram",
+                            'environment': "production",
                             })
-    cherrypy.server.start()
+    cherrypy.quickstart(Profiler(path))
 
 
 if __name__ == "__main__":

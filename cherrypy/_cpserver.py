@@ -1,268 +1,139 @@
-"""Create and manage the CherryPy server."""
+"""Manage HTTP servers with CherryPy."""
 
-import threading
-import time
+import warnings
 
 import cherrypy
-from cherrypy import _cphttptools
-from cherrypy.lib import cptools
+from cherrypy.lib import attributes
 
-from cherrypy._cpengine import Engine, STOPPED, STARTING, STARTED
+# We import * because we want to export check_port
+# et al as attributes of this module.
+from cherrypy.process.servers import *
 
-_missing = object()
 
-
-class Server(Engine):
+class Server(ServerAdapter):
+    """An adapter for an HTTP server.
+    
+    You can set attributes (like socket_host and socket_port)
+    on *this* object (which is probably cherrypy.server), and call
+    quickstart. For example:
+    
+        cherrypy.server.socket_port = 80
+        cherrypy.quickstart()
+    """
+    
+    socket_port = 8080
+    
+    _socket_host = '127.0.0.1'
+    def _get_socket_host(self):
+        return self._socket_host
+    def _set_socket_host(self, value):
+        if value == '':
+            raise ValueError("The empty string ('') is not an allowed value. "
+                             "Use '0.0.0.0' instead to listen on all active "
+                             "interfaces (INADDR_ANY).")
+        self._socket_host = value
+    socket_host = property(_get_socket_host, _set_socket_host,
+        doc="""The hostname or IP address on which to listen for connections.
+        
+        Host values may be any IPv4 or IPv6 address, or any valid hostname.
+        The string 'localhost' is a synonym for '127.0.0.1' (or '::1', if
+        your hosts file prefers IPv6). The string '0.0.0.0' is a special
+        IPv4 entry meaning "any active interface" (INADDR_ANY), and '::'
+        is the similar IN6ADDR_ANY for IPv6. The empty string or None are
+        not allowed.""")
+    
+    socket_file = None
+    socket_queue_size = 5
+    socket_timeout = 10
+    shutdown_timeout = 5
+    protocol_version = 'HTTP/1.1'
+    reverse_dns = False
+    thread_pool = 10
+    thread_pool_max = -1
+    max_request_header_size = 500 * 1024
+    max_request_body_size = 100 * 1024 * 1024
+    instance = None
+    ssl_context = None
+    ssl_certificate = None
+    ssl_certificate_chain = None
+    ssl_private_key = None
+    ssl_module = 'pyopenssl'
+    nodelay = True
+    wsgi_version = (1, 1)
     
     def __init__(self):
-        Engine.__init__(self)
-        self._is_setup = False
-        self.blocking = True
-        
+        self.bus = cherrypy.engine
         self.httpserver = None
-        # Starting in 2.2, the "httpserverclass" attr is essentially dead;
-        # no CP code uses it. Inspect "httpserver" instead.
-        self.httpserverclass = None
-        
-        # Backward compatibility:
-        self.onStopServerList = self.on_stop_server_list
-        self.onStartThreadList = self.on_start_thread_list
-        self.onStartServerList = self.on_start_server_list
-        self.onStopThreadList = self.on_stop_thread_list
-    
-    def start(self, init_only=False, server_class=_missing, server=None, **kwargs):
-        """Main function. MUST be called from the main thread.
-        
-        Set initOnly to True to keep this function from blocking.
-        Set serverClass and server to None to skip starting any HTTP server.
-        """
-        
-        # Read old variable names for backward compatibility
-        if 'initOnly' in kwargs:
-            init_only = kwargs['initOnly']
-        if 'serverClass' in kwargs:
-            server_class = kwargs['serverClass']
-        
-        conf = cherrypy.config.get
-        
-        if not init_only:
-            init_only = conf('server.init_only', False)
-        
-        if server is None:
-            server = conf('server.instance', None)
-        if server is None:
-            if server_class is _missing:
-                server_class = conf("server.class", _missing)
-            if server_class is _missing:
-                import _cpwsgi
-                server_class = _cpwsgi.WSGIServer
-            elif server_class and isinstance(server_class, basestring):
-                # Dynamically load the class from the given string
-                server_class = cptools.attributes(server_class)
-            self.httpserverclass = server_class
-            if server_class is not None:
-                self.httpserver = server_class()
-        else:
-            if isinstance(server, basestring):
-                server = cptools.attributes(server)
-            self.httpserverclass = server.__class__
-            self.httpserver = server
-        
-        self.blocking = not init_only
-        Engine.start(self)
-    
-    def _start(self):
-        if not self._is_setup:
-            self.setup()
-            self._is_setup = True
-        Engine._start(self)
-        self.start_http_server()
-        if self.blocking:
-            self.block()
-    
-    def restart(self):
-        """Restart the application server engine."""
-        self.stop()
-        self.state = STARTING
         self.interrupt = None
-        self._start()
+        self.running = False
     
-    def start_http_server(self, blocking=True):
-        """Start the requested HTTP server."""
+    def httpserver_from_self(self, httpserver=None):
+        """Return a (httpserver, bind_addr) pair based on self attributes."""
+        if httpserver is None:
+            httpserver = self.instance
+        if httpserver is None:
+            from cherrypy import _cpwsgi_server
+            httpserver = _cpwsgi_server.CPWSGIServer(self)
+        if isinstance(httpserver, basestring):
+            # Is anyone using this? Can I add an arg?
+            httpserver = attributes(httpserver)(self)
+        return httpserver, self.bind_addr
+    
+    def start(self):
+        """Start the HTTP server."""
         if not self.httpserver:
-            return
-        
-        if cherrypy.config.get('server.socket_port'):
-            host = cherrypy.config.get('server.socket_host')
-            port = cherrypy.config.get('server.socket_port')
-            
-            wait_for_free_port(host, port)
-            
-            if not host:
-                host = '0.0.0.0'
-            on_what = "http://%s:%s/" % (host, port)
+            self.httpserver, self.bind_addr = self.httpserver_from_self()
+        ServerAdapter.start(self)
+    start.priority = 75
+    
+    def _get_bind_addr(self):
+        if self.socket_file:
+            return self.socket_file
+        if self.socket_host is None and self.socket_port is None:
+            return None
+        return (self.socket_host, self.socket_port)
+    def _set_bind_addr(self, value):
+        if value is None:
+            self.socket_file = None
+            self.socket_host = None
+            self.socket_port = None
+        elif isinstance(value, basestring):
+            self.socket_file = value
+            self.socket_host = None
+            self.socket_port = None
         else:
-            on_what = "socket file: %s" % cherrypy.config.get('server.socket_file')
-        
-        # HTTP servers MUST be started in a new thread, so that the
-        # main thread persists to receive KeyboardInterrupt's. If an
-        # exception is raised in the http server's main thread then it's
-        # trapped here, and the CherryPy app server is shut down (via
-        # self.interrupt).
-        def _start_http():
             try:
-                self.httpserver.start()
-            except KeyboardInterrupt, exc:
-                self.interrupt = exc
-                self.stop()
-            except SystemExit, exc:
-                self.interrupt = exc
-                self.stop()
-                raise
-        t = threading.Thread(target=_start_http)
-        t.setName("CPHTTPServer " + t.getName())
-        t.start()
+                self.socket_host, self.socket_port = value
+                self.socket_file = None
+            except ValueError:
+                raise ValueError("bind_addr must be a (host, port) tuple "
+                                 "(for TCP sockets) or a string (for Unix "
+                                 "domain sockets), not %r" % value)
+    bind_addr = property(_get_bind_addr, _set_bind_addr)
+    
+    def base(self):
+        """Return the base (scheme://host[:port] or sock file) for this server."""
+        if self.socket_file:
+            return self.socket_file
         
-        if blocking:
-            self.wait_for_http_ready()
+        host = self.socket_host
+        if host in ('0.0.0.0', '::'):
+            # 0.0.0.0 is INADDR_ANY and :: is IN6ADDR_ANY.
+            # Look up the host name, which should be the
+            # safest thing to spit out in a URL.
+            import socket
+            host = socket.gethostname()
         
-        cherrypy.log("Serving HTTP on %s" % on_what, 'HTTP')
-    
-    def wait(self):
-        """Block the caller until ready to receive requests (or error)."""
-        Engine.wait(self)
-        self.wait_for_http_ready()
-    
-    def wait_for_http_ready(self):
-        if self.httpserver:
-            while (not getattr(self.httpserver, "ready", True)
-                   and not self.interrupt
-                   and self.state != STOPPED):
-                time.sleep(.1)
-            
-            # Wait for port to be occupied
-            if cherrypy.config.get('server.socket_port'):
-                host = cherrypy.config.get('server.socket_host')
-                port = cherrypy.config.get('server.socket_port')
-                if not host:
-                    host = 'localhost'
-                
-                for trial in xrange(50):
-                    if self.interrupt:
-                        break
-                    try:
-                        check_port(host, port)
-                    except IOError:
-                        break
-                    else:
-                        time.sleep(.1)
-                else:
-                    cherrypy.log("Port %s not bound on %s" %
-                                 (repr(port), repr(host)), 'HTTP')
-                    raise cherrypy.NotReady("Port not bound.")
-    
-    def stop(self):
-        """Stop, including any HTTP servers."""
-        self.stop_http_server()
-        Engine.stop(self)
-    
-    def stop_http_server(self):
-        """Stop the HTTP server."""
-        try:
-            httpstop = self.httpserver.stop
-        except AttributeError:
-            pass
+        port = self.socket_port
+        
+        if self.ssl_certificate:
+            scheme = "https"
+            if port != 443:
+                host += ":%s" % port
         else:
-            # httpstop() MUST block until the server is *truly* stopped.
-            httpstop()
-            cherrypy.log("HTTP Server shut down", "HTTP")
-    
-    def start_with_callback(self, func, args=None, kwargs=None,
-                            server_class = _missing, serverClass = None):
-        """Start, then callback the given func in a new thread."""
+            scheme = "http"
+            if port != 80:
+                host += ":%s" % port
         
-        # Read old name for backward compatibility
-        if serverClass is not None:
-            server_class = None
-        
-        if args is None:
-            args = ()
-        if kwargs is None:
-            kwargs = {}
-        args = (func,) + args
-        
-        def _callback(func, *args, **kwargs):
-            self.wait()
-            func(*args, **kwargs)
-        t = threading.Thread(target=_callback, args=args, kwargs=kwargs)
-        t.setName("CPServer Callback " + t.getName())
-        t.start()
-        
-        self.start(server_class = server_class)
+        return "%s://%s" % (scheme, host)
 
-
-def check_port(host, port):
-    """Raise an error if the given port is not free on the given host."""
-    sock_file = cherrypy.config.get('server.socket_file')
-    if sock_file:
-        return
-    
-    if not host:
-        host = 'localhost'
-    port = int(port)
-    
-    import socket
-    
-    # AF_INET or AF_INET6 socket
-    # Get the correct address family for our host (allows IPv6 addresses)
-    for res in socket.getaddrinfo(host, port, socket.AF_UNSPEC,
-                                  socket.SOCK_STREAM):
-        af, socktype, proto, canonname, sa = res
-        s = None
-        try:
-            s = socket.socket(af, socktype, proto)
-            # See http://groups.google.com/group/cherrypy-users/
-            #        browse_frm/thread/bbfe5eb39c904fe0
-            s.settimeout(1.0)
-            s.connect((host, port))
-            s.close()
-            raise IOError("Port %s is in use on %s; perhaps the previous "
-                          "server did not shut down properly." %
-                          (repr(port), repr(host)))
-        except socket.error:
-            if s:
-                s.close()
-
-
-def wait_for_free_port(host, port):
-    """Wait for the specified port to become free (drop requests)."""
-    if not host:
-        host = 'localhost'
-    
-    for trial in xrange(50):
-        try:
-            check_port(host, port)
-        except IOError:
-            # Give the old server thread time to free the port.
-            time.sleep(.1)
-        else:
-            return
-    
-    cherrypy.log("Port %s not free on %s" % (repr(port), repr(host)), 'HTTP')
-    raise cherrypy.NotReady("Port not free.")
-
-def wait_for_occupied_port(host, port):
-    """Wait for the specified port to become active (receive requests)."""
-    if not host:
-        host = 'localhost'
-    
-    for trial in xrange(50):
-        try:
-            check_port(host, port)
-        except IOError:
-            return
-        else:
-            time.sleep(.1)
-    
-    cherrypy.log("Port %s not bound on %s" % (repr(port), repr(host)), 'HTTP')
-    raise cherrypy.NotReady("Port not bound.")

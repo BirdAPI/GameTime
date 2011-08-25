@@ -8,22 +8,26 @@ http://www.garethrees.org/2001/12/04/python-coverage/
 or Ned Batchelder's enhanced version:
 http://www.nedbatchelder.com/code/modules/coverage.html
 
-Set "cherrypy.codecoverage = True" to turn on coverage tracing.
-Then, use the serve() function to browse the results in a web browser.
-If you run this module from the command line, it will call serve() for you.
+To turn on coverage tracing, use the following code:
+
+    cherrypy.engine.subscribe('start', covercp.start)
+
+DO NOT subscribe anything on the 'start_thread' channel, as previously
+recommended. Calling start once in the main thread should be sufficient
+to start coverage on all threads. Calling start again in each thread
+effectively clears any coverage data gathered up to that point.
+
+Run your code, then use the covercp.serve() function to browse the
+results in a web browser. If you run this module from the command line,
+it will call serve() for you.
 """
 
 import re
 import sys
 import cgi
-import urllib
+from urllib import quote_plus
 import os, os.path
 localFile = os.path.join(os.path.dirname(__file__), "coverage.cache")
-
-try:
-    import cStringIO as StringIO
-except ImportError:
-    import StringIO
 
 try:
     from coverage import the_coverage as coverage
@@ -39,10 +43,7 @@ except ImportError:
     
     def start():
         pass
-
-# Guess initial depth to hide FIXME this doesn't work for non-cherrypy stuff
-import cherrypy
-initial_base = os.path.dirname(cherrypy.__file__)
+start.priority = 20
 
 TEMPLATE_MENU = """<html>
 <head>
@@ -134,7 +135,7 @@ TEMPLATE_FRAMESET = """<html>
     <frame name='main' src='' />
 </frameset>
 </html>
-""" % initial_base.lower()
+"""
 
 TEMPLATE_COVERAGE = """<html>
 <head>
@@ -184,24 +185,24 @@ def _percent(statements, missing):
 def _show_branch(root, base, path, pct=0, showpct=False, exclude=""):
     
     # Show the directory name and any of our children
-    dirs = [k for k, v in root.iteritems() if v]
+    dirs = [k for k, v in root.items() if v]
     dirs.sort()
     for name in dirs:
         newpath = os.path.join(path, name)
         
-        if newpath.startswith(base):
+        if newpath.lower().startswith(base):
             relpath = newpath[len(base):]
             yield "| " * relpath.count(os.sep)
             yield "<a class='directory' href='menu?base=%s&exclude=%s'>%s</a>\n" % \
-                   (newpath, urllib.quote_plus(exclude), name)
+                   (newpath, quote_plus(exclude), name)
         
         for chunk in _show_branch(root[name], base, newpath, pct, showpct, exclude):
             yield chunk
     
     # Now list the files
-    if path.startswith(base):
+    if path.lower().startswith(base):
         relpath = path[len(base):]
-        files = [k for k, v in root.iteritems() if not v]
+        files = [k for k, v in root.items() if not v]
         files.sort()
         for name in files:
             newpath = os.path.join(path, name)
@@ -215,7 +216,7 @@ def _show_branch(root, base, path, pct=0, showpct=False, exclude=""):
                     pass
                 else:
                     pc = _percent(statements, missing)
-                    pc_str = ("%3d%% " % pc).replace(' ','&nbsp;')
+                    pc_str = ("%3d%% " % pc).replace(' ', '&nbsp;')
                     if pc < float(pct) or pc == -1:
                         pc_str = "<span class='fail'>%s</span>" % pc_str
                     else:
@@ -251,7 +252,7 @@ def get_tree(base, exclude):
     """Return covered module names as a nested dict."""
     tree = {}
     coverage.get_ready()
-    runs = coverage.cexecuted.keys()
+    runs = list(coverage.cexecuted.keys())
     if runs:
         for path in runs:
             if not _skip_file(path, exclude) and not os.path.isdir(path):
@@ -260,8 +261,16 @@ def get_tree(base, exclude):
 
 class CoverStats(object):
     
+    def __init__(self, root=None):
+        if root is None:
+            # Guess initial depth. Files outside this path will not be
+            # reachable from the web interface.
+            import cherrypy
+            root = os.path.dirname(cherrypy.__file__)
+        self.root = root
+    
     def index(self):
-        return TEMPLATE_FRAMESET
+        return TEMPLATE_FRAMESET % self.root.lower()
     index.exposed = True
     
     def menu(self, base="/", pct="50", showpct="",
@@ -281,7 +290,7 @@ class CoverStats(object):
         for atom in atoms:
             path += atom + os.sep
             yield ("<a href='menu?base=%s&exclude=%s'>%s</a> %s"
-                   % (path, urllib.quote_plus(exclude), atom, os.sep))
+                   % (path, quote_plus(exclude), atom, os.sep))
         yield "</div>"
         
         yield "<div id='tree'>"
@@ -292,7 +301,7 @@ class CoverStats(object):
             yield "<p>No modules covered.</p>"
         else:
             for chunk in _show_branch(tree, base, "/", pct,
-                                      showpct=='checked', exclude):
+                                      showpct == 'checked', exclude):
                 yield chunk
         
         yield "</div>"
@@ -338,18 +347,17 @@ class CoverStats(object):
     report.exposed = True
 
 
-def serve(path=localFile, port=8080):
+def serve(path=localFile, port=8080, root=None):
     if coverage is None:
         raise ImportError("The coverage module could not be imported.")
     coverage.cache_default = path
     
     import cherrypy
-    cherrypy.root = CoverStats()
-    cherrypy.config.update({'server.socket_port': port,
+    cherrypy.config.update({'server.socket_port': int(port),
                             'server.thread_pool': 10,
-                            'server.environment': "production",
+                            'environment': "production",
                             })
-    cherrypy.server.start()
+    cherrypy.quickstart(CoverStats(root))
 
 if __name__ == "__main__":
     serve(*tuple(sys.argv[1:]))
