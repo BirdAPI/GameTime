@@ -1,0 +1,6 @@
+[submodule "IGN-Scraper-API"]
+	path = IGN-Scraper-API
+	url = git@github.com:BirdAPI/IGN-Scraper-API.git
+[submodule "abgx360-AutoPatcher"]
+	path = abgx360-AutoPatcher
+	url = git@github.com:BirdAPI/abgx360-AutoPatcher.git
