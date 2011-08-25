@@ -87,7 +87,7 @@ def is_64bit():
 
 def verify_stealth(iso, xex):
     exe = get_abgx360_exe()
-    args = '-vchi --aa --ach -- "%s"' % iso
+    args = '-vchi --embed --aa --ach -- "%s"' % iso
     output = os.popen(exe + " " + args).read()
     logname = os.path.join(os.path.dirname(iso), xex + "_verify.html")
     write_to_file(output, logname)
@@ -95,7 +95,7 @@ def verify_stealth(iso, xex):
     
 def stealth_patch_ssv2(iso, ss, dmi, xex):
     exe = get_abgx360_exe()
-    args = '-vhi --noverify --patchitanyway --p-dmi "%s" --p-ss "%s" -- "%s"' % (dmi, ss, iso)
+    args = '-vhi --noverify --patchitanyway --embed --p-dmi "%s" --p-ss "%s" -- "%s"' % (dmi, ss, iso)
     output = os.popen(exe + " " + args).read()
     logname = os.path.join(os.path.dirname(iso), xex + "_patch.html")
     write_to_file(output, logname)
