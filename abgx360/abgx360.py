@@ -45,11 +45,8 @@ def get_first_ssv2(ss_link):
         return (None, None)
 
 def download_file(link, dest_dir):
-    dest_dir = dest_dir.replace("\\", "/")
-    if dest_dir != "" and dest_dir[len(dest_dir) - 1] != "/":
-        dest_dir = dest_dir + "/"
     ensure_dir_exists(dest_dir)
-    destname = dest_dir + get_filename_from_url(link)
+    destname = os.path.join(dest_dir, get_filename_from_url(link))
     urllib.urlretrieve(link, destname)
     return destname
 
@@ -69,7 +66,7 @@ def get_xex_game_patches(iso):
         if ss is not None and dmi is not None:
             print "SS: " + ss
             print "DMI: " + dmi
-            patch_path = os.path.dirname(iso) + "/" + xex + "_SSv2"
+            patch_path = os.path.join(os.path.dirname(iso), xex + "_SSv2")
             ss_filename = download_file(ss, patch_path)
             print "Downloaded: " + ss_filename
             dmi_filename = download_file(dmi, patch_path)
@@ -92,7 +89,7 @@ def verify_stealth(iso, xex):
     exe = get_abgx360_exe()
     args = '-vchi --aa --ach -- "%s"' % iso
     output = os.popen(exe + " " + args).read()
-    logname = os.path.dirname(iso) + "/" + xex + "_verify.html"
+    logname = os.path.join(os.path.dirname(iso), xex + "_verify.html")
     write_to_file(output, logname)
     return logname
     
@@ -100,7 +97,7 @@ def stealth_patch_ssv2(iso, ss, dmi, xex):
     exe = get_abgx360_exe()
     args = '-vhi --noverify --patchitanyway --p-dmi "%s" --p-ss "%s" -- "%s"' % (dmi, ss, iso)
     output = os.popen(exe + " " + args).read()
-    logname = os.path.dirname(iso) + "/" + xex + "_patch.html"
+    logname = os.path.join(os.path.dirname(iso), xex + "_patch.html")
     write_to_file(output, logname)
     return logname
 
