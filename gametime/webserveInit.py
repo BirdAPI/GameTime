@@ -13,6 +13,7 @@ def initWebServer(options = {}):
         options.setdefault('username',    '')
         options.setdefault('password',    '')
         options.setdefault('web_root',   '/')
+        options.setdefault('data_root',   './')
         assert isinstance(options['port'], int)
         assert 'data_root' in options
 

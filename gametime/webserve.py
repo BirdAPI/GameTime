@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+import cherrypy.lib
+
 class WebInterface:
 
     @cherrypy.expose
