@@ -2,26 +2,18 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <body>
 
-#import gametime
-#import os
-#from abgx360 import abgx360
-
-#set $res = abgx360.get_xex_game_patches($iso)
-#set $patch_html_log = abgx360.stealth_patch_ssv2($iso, $res[1], $res[2], $res[0])
-#set $html = open($patch_html_log).read()
 
 <div>
-    <frame marginheight="10" marginwidth="10">$html</frame>
+    <span>abgx360 Patch SSv2 Output:</span>
+    <br />
+    <iframe height="40%" width="99%" src="/abgx360Patch?iso=$iso"></iframe>
 </div>
-
-#set $verify_html_log = abgx360.verify_stealth($iso, $res[0])
-#set $stealth_success = abgx360.is_stealth_verified($verify_html_log, True)
-#set $html2 = open($verify_html_log).read()
 
 <div>
-    <frame marginheight="10" marginwidth="10">$html2</frame>
+    <span>abgx360 Verify Output:</span>
+    <br />
+    <iframe height="40%" width="99%" src="/abgx360Verify?iso=$iso&xex=$xex"></iframe>
 </div>
-
 
 </body>
 </html>

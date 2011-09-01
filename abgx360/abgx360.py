@@ -76,7 +76,7 @@ def get_xex_game_patches(iso):
             print "No SSv2 Patches Found!"
             return (None, None, None)
     else:
-        print "No Results: " + search
+        print "No Results: " + iso
         return (None, None, None)
 
 def get_abgx360_exe():
