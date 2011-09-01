@@ -3,6 +3,9 @@
 import cherrypy.lib.auth_basic
 import os.path
 
+import shutil
+
+import gametime
 from gametime import logger
 from gametime.webserve import WebInterface
 
@@ -72,5 +75,10 @@ def initWebServer(options = {}):
                         }
                 })
 
+        try:
+            shutil.copy(gametime.DATABASE_SCHEMA_FILENAME, gametime.DATABASE_FILENAME)
+        except IOError:
+            print "Error copying %s to %s" % (gametime.DATABASE_SCHEMA_FILENAME, gametime.DATABASE_FILENAME)
+                
         cherrypy.server.start()
         cherrypy.server.wait()

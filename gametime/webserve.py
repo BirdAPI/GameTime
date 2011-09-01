@@ -11,12 +11,26 @@ import gametime
 from cheetah.Template import Template
 
 from abgx360 import abgx360
+from IGN import ign
+from IGN.ign import IGN
 
 class WebInterface:
 
     @cherrypy.expose
     def index(self):
         print "Welcome to GameTime!"
+        t = Template(open(os.path.join(gametime.TMPL_DIR, "index.tmpl")).read())
+        return munge(t)
+    
+    @cherrypy.expose
+    def search(self, query):
+        t = Template(open(os.path.join(gametime.TMPL_DIR, "search.tmpl")).read())
+        t.results = IGN.search(query)
+        return munge(t)
+        
+    @cherrypy.expose
+    def addGame(self, ign_id):
+        return None
         
     @cherrypy.expose
     def verifyStealth(self):
