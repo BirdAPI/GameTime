@@ -30,7 +30,12 @@ class WebInterface:
         
     @cherrypy.expose
     def addGame(self, ign_id):
-        return None
+        link = IGN.get_info_link(ign_id)
+        print link
+        info = IGN.get_game_info(link)
+        print info
+        info.insert_into_db(gametime.DATABASE_FILENAME, "IGNGameInfo")
+        return munge(repr(info)) 
         
     @cherrypy.expose
     def verifyStealth(self):

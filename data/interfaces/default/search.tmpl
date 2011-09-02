@@ -7,7 +7,7 @@
 #for $result in $results
     <li>
         <div>
-            <img src="$result.boxart" style="display: inline" />
+            <a href="$result.link"><img src="$result.boxart" style="display: inline" /></a>
             <div style="display: inline">
                 #set $id = IGN.get_id($result.link)
                 <a href="addGame?ign_id=$id">$result.title [$result.system] - $result.score</a> <br />
