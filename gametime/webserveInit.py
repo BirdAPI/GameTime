@@ -75,10 +75,11 @@ def initWebServer(options = {}):
                         }
                 })
 
-        try:
-            shutil.copy(gametime.DATABASE_SCHEMA_FILENAME, gametime.DATABASE_FILENAME)
-        except IOError:
-            print "Error copying %s to %s" % (gametime.DATABASE_SCHEMA_FILENAME, gametime.DATABASE_FILENAME)
+        if not os.path.exists(gametime.DATABASE_FILENAME):
+            try:
+                shutil.copy(gametime.DATABASE_SCHEMA_FILENAME, gametime.DATABASE_FILENAME)
+            except IOError:
+                print "Error copying %s to %s" % (gametime.DATABASE_SCHEMA_FILENAME, gametime.DATABASE_FILENAME)
                 
         cherrypy.server.start()
         cherrypy.server.wait()

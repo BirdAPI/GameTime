@@ -2,6 +2,8 @@
 
 import cherrypy.lib
 
+from collections import namedtuple
+import sqlite3
 import sys
 import re
 import os
@@ -13,13 +15,18 @@ from cheetah.Template import Template
 from abgx360 import abgx360
 from IGN import ign
 from IGN.ign import IGN
+from IGN.ign import GameInfo
 
 class WebInterface:
 
     @cherrypy.expose
     def index(self):
-        print "Welcome to GameTime!"
         t = Template(open(os.path.join(gametime.TMPL_DIR, "index.tmpl")).read())
+        sqlQuery = "SELECT * FROM IGNGameInfo ORDER BY name"
+        conn = sqlite3.connect(gametime.DATABASE_FILENAME)
+        conn.row_factory = sqlite3.Row
+        mygames = [ GameInfo(row) for row in conn.execute(sqlQuery).fetchall() ]
+        t.mygames = mygames
         return munge(t)
     
     @cherrypy.expose
@@ -34,8 +41,9 @@ class WebInterface:
         print link
         info = IGN.get_game_info(link)
         print info
-        info.insert_into_db(gametime.DATABASE_FILENAME, "IGNGameInfo")
-        return munge(repr(info)) 
+        if info:
+            info.insert_into_db(gametime.DATABASE_FILENAME, "IGNGameInfo")
+        raise cherrypy.InternalRedirect("/")
         
     @cherrypy.expose
     def verifyStealth(self):
