@@ -68,7 +68,6 @@ class WebInterface:
         t.ign = get_generic_from_db(IGNInfo(), conn.execute("SELECT * FROM IGNInfo WHERE id = ?", [game.ign_id]).fetchone())
         t.gamespot = get_generic_from_db(GamespotInfo(), conn.execute("SELECT * FROM GamespotInfo WHERE id = ?", [game.gamespot_id]).fetchone())
         t.gt = get_generic_from_db(GTInfo(), conn.execute("SELECT * FROM GTInfo WHERE id = ?", [game.gametrailers_id]).fetchone())
-        pprint(vars(t.gt))
         conn.close()
         return munge(t)
     

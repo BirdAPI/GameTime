@@ -1,7 +1,9 @@
 #!/usr/bin/python
 import os
 
-PROG_DIR = '.'
+PROG_DIR = os.getcwd()
+CSS_DIR = os.path.join(PROG_DIR, 'data/css')
+JS_DIR = os.path.join(PROG_DIR, 'data/js')
 IMAGES_DIR = os.path.join(PROG_DIR, 'data/images')
 TMPL_DIR = os.path.join(PROG_DIR, 'data/interfaces/default')
 
