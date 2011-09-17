@@ -1,29 +1,87 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+#import gametime
 <html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>GameTime - My Games</title>
+<style type="text/css">
+.even {
+    background-color: #FFEECA;
+}
+</style>
+</head>
 <body>
 
 <form name="queryForm" action="search">
     <input type="text" name="query" size="75px"/>
+    <select name="site">
+        <option value="gametrailers">GameTrailers</option>
+        <option value="gamespot">Gamespot</option>
+        <option value="metacritic">Metacritic</option>
+        <option value="ign">IGN</option>
+    </select>
     <input type="submit" value="Search" />
 </form>
 
 <div id="mygames">
-<h2>My Games:</h2>
+<h2>My Games:</h2> <a href="/updateAllGames"><button>Update All Games</button></a>
 <br />
 <ul style="list-style-type:none">
+#set $i = 0
 #for $game in $mygames:
     <li>
-        <div>
+        #set $cls = "even" if ($i % 2 == 0) else "odd"
+        <div class="$cls" id="Game_$game.id">
             <table>
             <tr>
                 <td>
-                    <a href="$game.link"><img src="$game.boxart" width="100px"/></a>
+                    <a href="updateGame?id=$game.id"><img src="$game.boxart" width="100px"/></a>
                 </td>
                 <td valign="top" style="padding-left:15px" >
                     <div>
-                        #set $score = $game.ign_score if $game.ign_score else "No Rating"
-                        <b><a href="$game.link">$game.name [$game.system] - $score</a></b> <br />
-                        <b>Release Date:</b> $game.release_date_text <br />
+                        #set $score = $game.my_rating if $game.my_rating else "No Rating"
+                        <b><a href="/gameInfo?id=$game.id">$game.title [$game.system]</a></b> 
+                        <br />
+                        <b>Release Date:</b> $game.my_date.__str__() <br />
+                        <a href="updateMetacriticInfo?id=$game.id&metacritic_id=$game.metacritic_id" style="text-decoration:none">
+                            <button type="button">
+                                #if $game.metacritic_id:
+                                    Update Metacritic
+                                #else:
+                                    Get Metacritic Info
+                                #end if
+                            </button>
+                        </a>
+                        <a href="updateIGNInfo?id=$game.id&ign_id=$game.ign_id" style="text-decoration:none">
+                            <button type="button">
+                                #if $game.ign_id:
+                                    Update IGN
+                                #else:
+                                    Get IGN Info
+                                #end if
+                            </button>
+                        </a>
+                        <a href="updateGamespotInfo?id=$game.id&gamespot_id=$game.gamespot_id" style="text-decoration:none">
+                            <button type="button">
+                                #if $game.gamespot_id:
+                                    Update Gamespot
+                                #else:
+                                    Get Gamespot Info
+                                #end if
+                            </button>
+                        </a>
+                        <a href="updateGTInfo?id=$game.id&gametrailers_id=$game.gametrailers_id" style="text-decoration:none">
+                            <button type="button">
+                                #if $game.gametrailers_id:
+                                    Update GameTrailers
+                                #else:
+                                    Get GameTrailers Info
+                                #end if
+                            </button>
+                        </a>
+                        <a href="removeGame?id=$game.id" style="text-decoration:none">
+                            <button type="button">X</button>
+                        </a>
+                        <br />
                         $game.summary
                     </div>
                 </td>
@@ -32,6 +90,7 @@
         </div>
         <br />
     </li>
+    #set $i = $i + 1
 #end for
 </ul>
 </div>

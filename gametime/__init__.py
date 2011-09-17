@@ -2,6 +2,7 @@
 import os
 
 PROG_DIR = '.'
+IMAGES_DIR = os.path.join(PROG_DIR, 'data/images')
 TMPL_DIR = os.path.join(PROG_DIR, 'data/interfaces/default')
 
 DATABASE_FILENAME = 'gametime.s3db'

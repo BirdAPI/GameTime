@@ -4,3 +4,12 @@
 [submodule "abgx360-AutoPatcher"]
 	path = abgx360
 	url = git@github.com:BirdAPI/abgx360-AutoPatcher.git
+[submodule "metacritic"]
+	path = metacritic
+	url = git@github.com:BirdAPI/Metacritic-Scraper-API.git
+[submodule "gamespot"]
+	path = gamespot
+	url = git@github.com:BirdAPI/GameSpot-Scraper-API.git
+[submodule "gametrailers"]
+	path = gametrailers
+	url = git@github.com:BirdAPI/GameTrailers-Scraper-API.git
