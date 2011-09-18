@@ -29,6 +29,12 @@ class MyGame:
     def my_date(self):
         return MyDate(self.release_date)
     
+    def set_provider_id(self, provider, value):
+        self.__dict__[provider.xref_id_column] = value
+    
+    def get_provider_id(self, provider):
+        return self.__dict__[provider.xref_id_column] if provider.xref_id_column in self.__dict__ else None
+    
     """
     Updates MyGame with GameInfo values. Will only fill
     in the empty values, unless force=True
@@ -88,3 +94,4 @@ class MyGame:
     def get_all_ids():
         rows = db.db_fetch_all(gametime.DATABASE_FILENAME, "SELECT id FROM MyGame")
         return [ row["id"] for row in rows ]
+    

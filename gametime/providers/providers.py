@@ -10,9 +10,12 @@ class GameProvider:
         self.search_tmpl = None
         self.info_tmpl = None
         self.favicon = None
+        # The column in MyGame that points to this provider: MyGame.thisprovider_id
         self.xref_id_column = None
         self.id_column = "id"
         self.ignore_list = []
+        # MultiSystem is a provider that uses the same id for the same game on different systems
+        self.is_multi_system = False
         
     """
     Returns a list of search results
@@ -30,9 +33,7 @@ class GameProvider:
     Given an id, retreive the GameInfo object from the internet
     """
     def get_info(self, game_id, info_id):
-        return None        
-        
-        
+        return None
     
     """
     Perform a search and match the search result, then return the game info id
@@ -42,7 +43,8 @@ class GameProvider:
         system_norm = normalize_system(system)
         results = self.search(title)
         for result in results:
-            if normalize_system(self.get_system(result)) == system_norm:
+            systems = [ normalize_system(system) for system in self.get_systems(result) ]
+            if system_norm in systems:
                 if normalize_game_title(self.get_title(result)) == title_norm:
                     return self.get_id(result)
         return None
@@ -77,20 +79,36 @@ class GameProvider:
     These should only need to be overriden if the provider isnt standardized
     """
     def get_id(self, info):
-        return info.id
+        return info.id if hasattr(info, "id") else None
     def get_boxart(self, info):
-        return info.boxart
+        return try_get(info, "boxart")
     def get_title(self, info):
-        return info.title  
+        return try_get(info, "title", "name")
     def get_system(self, info):
-        return info.system      
+        return try_get(info, "system")     
     def get_summary(self, info):
-        return info.summary        
+        return try_get(info, "summary", "description", "deck") 
     def get_release_date(self, info):
-        return info.release_date
-        
-        
-
+        return try_get(info, "release_date", "release_date_text", "original_release_date")
+    def get_esrb(self, info):
+        return try_get(info, "esrb", "esrb_rating")
+    def get_esrb_reason(self, info):
+        return try_get(info, "esrb_reason")
+    def get_developer(self, info):
+        return try_get(info, "developer", "dev")
+    def get_publisher(self, info):
+        return try_get(info, "publisher", "pub")
+    def get_systems(self, info):
+        return info.systems if self.is_multi_system and hasattr(info, "systems") else [ get_system() ]
+    
+    
+def try_get(obj, *attr_names):
+    for attr in attr_names:
+        try:
+            return obj.__dict__[attr]
+        except AttributeError:
+            pass
+    return None
 
 def normalize_system(system):
     s = system.lower()
