@@ -10,6 +10,7 @@ class GameProvider:
         self.search_tmpl = None
         self.info_tmpl = None
         self.favicon = None
+        self.favicon_blank = None
         # The column in MyGame that points to this provider: MyGame.thisprovider_id
         self.xref_id_column = None
         self.id_column = "id"
@@ -79,54 +80,79 @@ class GameProvider:
     These should only need to be overriden if the provider isnt standardized
     """
     def get_id(self, info):
-        return info.id if hasattr(info, "id") else None
+        return try_get(info, "id")
+    
+    def get_link(self, info):
+        return try_get(info, "link", "info_link", "url", "info_url")
+    
     def get_boxart(self, info):
         return try_get(info, "boxart")
+    
     def get_title(self, info):
         return try_get(info, "title", "name")
+    
     def get_system(self, info):
-        return try_get(info, "system")     
+        return try_get(info, "system", "platform") 
+        
     def get_summary(self, info):
         return try_get(info, "summary", "description", "deck") 
+    
     def get_release_date(self, info):
         return try_get(info, "release_date", "release_date_text", "original_release_date")
+    
     def get_esrb(self, info):
         return try_get(info, "esrb", "esrb_rating")
+    
     def get_esrb_reason(self, info):
         return try_get(info, "esrb_reason")
+    
     def get_developer(self, info):
         return try_get(info, "developer", "dev")
+    
     def get_publisher(self, info):
         return try_get(info, "publisher", "pub")
-    def get_systems(self, info):
-        return info.systems if self.is_multi_system and hasattr(info, "systems") else [ get_system() ]
     
+    def get_developer_link(self, info):
+        return try_get(info, "developer_link", "dev_link")
+    
+    def get_publisher_link(self, info):
+        return try_get(info, "publisher_link", "pub_link")
+    
+    def get_official_site(self, info):
+        return try_get(info, "official_site", "official_url", "official_link")
+    
+    def get_systems(self, info):
+        systems = try_get(info, "systems", "platforms")
+        return systems if systems else [ self.get_system(info) ]
+
+
+
     
 def try_get(obj, *attr_names):
     for attr in attr_names:
         try:
             return obj.__dict__[attr]
-        except AttributeError:
+        except KeyError:
             pass
     return None
 
 def normalize_system(system):
-    s = system.lower()
-    if s in ["x360", "xbox 360", "xb360"]:
+    s = system.lower().replace("-", "").replace("_", "").replace(" ", "")
+    if s in ["x360", "xbox360", "xb360"]:
         return "Xbox 360"
-    elif s in ["ps3", "playstation 3"]:
+    elif s in ["ps3", "playstation3"]:
         return "PS3"
     elif s in ["wii"]:
         return "Wii"
-    elif s in ["psp", "playstation portable"]:
+    elif s in ["psp", "playstationportable"]:
         return "PSP"
     elif s in ["ds"]:
         return "DS"
-    elif s in ["ps", "ps1", "playstation 1", "playstation1"]:
+    elif s in ["ps", "ps1", "playstation1"]:
         return "PS1"
-    elif s in ["ps2", "playstation 2", "playstation2"]:
+    elif s in ["ps2", "playstation2"]:
         return "PS2"
-    elif s in ["pc", "computer", "personal computer", "personalcomputer"]:
+    elif s in ["pc", "computer", "personalcomputer"]:
         return "PC"
     else:
         return system

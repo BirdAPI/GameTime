@@ -31,7 +31,7 @@ class WebInterface:
     
     @cherrypy.expose
     def search(self, query, site_id):
-        if site_id in GAME_PROVIDERS.keys():
+        if site_id in GAME_PROVIDERS:
             provider = GAME_PROVIDERS[site_id]
             t = Template(open(os.path.join(gametime.TMPL_DIR, provider.search_tmpl)).read())
             t.results = provider.search(query)
@@ -55,7 +55,7 @@ class WebInterface:
         game = MyGame()
         game.title = title
         game.system = providers.normalize_system(system)
-        if site_id in GAME_PROVIDERS.keys():
+        if site_id in GAME_PROVIDERS:
             provider = GAME_PROVIDERS[site_id]
             game.set_provider_id(provider, info_id)
             game.insert_in_db()
@@ -85,7 +85,7 @@ class WebInterface:
         
     @cherrypy.expose
     def updateInfo(self, id, site_id, info_id=None, redirect=True):
-        if site_id in GAME_PROVIDERS.keys():
+        if site_id in GAME_PROVIDERS:
             provider = GAME_PROVIDERS[site_id]
             game = MyGame.get(id)
             if game:

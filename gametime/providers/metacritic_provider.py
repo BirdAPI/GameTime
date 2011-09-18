@@ -12,6 +12,7 @@ class MetacriticProvider(GameProvider):
         self.search_tmpl = "searchMetacritic.tmpl"
         self.info_tmpl = "metacriticInfo.tmpl"
         self.favicon = "metacritic.png"
+        self.favicon_blank = "metacritic_blank.png"
         self.xref_id_column = "metacritic_id"
         
     def search(self, query, *args, **kwargs):

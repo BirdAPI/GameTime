@@ -15,6 +15,7 @@ class GTProvider(GameProvider):
         self.search_tmpl = "searchGT.tmpl"
         self.info_tmpl = "gtInfo.tmpl"
         self.favicon = "gametrailers.png"
+        self.favicon_blank = "gametrailers_blank.png"
         self.xref_id_column = "gametrailers_id"
         self.ignore_list = ["systems"]
         self.is_multi_system = True

@@ -12,6 +12,7 @@ class GamespotProvider(GameProvider):
         self.search_tmpl = "searchGamespot.tmpl"
         self.info_tmpl = "gamespotInfo.tmpl"
         self.favicon = "gamespot.png"
+        self.favicon_blank = "gamespot_blank.png"
         self.xref_id_column = "gamespot_id"
         
     def search(self, query, *args, **kwargs):

@@ -11,6 +11,7 @@ class MyGame:
         self.boxart = None
         self.release_date = None
         self.summary = None
+        
         self.metacritic_id = None
         self.ign_id = None
         self.giantbomb_id = None
@@ -21,9 +22,18 @@ class MyGame:
         self.gamestop_id = None
         self.gametrailers_id = None
         self.amazon_asin = None
+        
         self.date_added = None
         self.downloaded = None
         self.my_rating = None
+        
+        self.developer = None
+        self.publisher = None
+        self.developer_link = None
+        self.publisher_link = None
+        self.official_site = None
+        self.esrb = None
+        self.esrb_reason = None
             
     @property
     def my_date(self):
@@ -50,6 +60,20 @@ class MyGame:
             self.title = provider.get_title(info)
         if not self.summary or (force and provider.get_summary(info)):
             self.summary = provider.get_summary(info)
+        if not self.developer or (force and provider.get_developer(info)):
+            self.developer = provider.get_developer(info)     
+        if not self.publisher or (force and provider.get_publisher(info)):
+            self.publisher = provider.get_publisher(info)
+        if not self.developer_link or (force and provider.get_developer_link(info)):
+            self.developer_link = provider.get_developer_link(info)            
+        if not self.publisher_link or (force and provider.get_publisher_link(info)):
+            self.publisher_link = provider.get_publisher_link(info)               
+        if not self.official_site or (force and provider.get_official_site(info)):
+            self.official_site = provider.get_official_site(info)
+        if not self.esrb or (force and provider.get_esrb(info)):
+            self.esrb = provider.get_esrb(info)
+        if not self.esrb_reason or (force and provider.get_esrb_reason(info)):
+            self.esrb_reason = provider.get_esrb_reason(info)
         old_date = self.my_date
         new_date = MyDate(provider.get_release_date(info))
         compl = MyDate.compare_completeness(new_date, old_date)

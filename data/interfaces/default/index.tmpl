@@ -36,34 +36,74 @@
             <table>
             <tr>
                 <td>
-                    <a href="updateGame?id=$game.id"><img src="$game.boxart" width="100px"/></a>
+                    <a href="updateGame?id=$game.id">
+                    <img src="$game.boxart" width="100px"/>
+                    </a>
                 </td>
                 <td valign="top" style="padding-left:15px" >
-                    <div>
-                        #set $score = $game.my_rating if $game.my_rating else "No Rating"
-                        <b><a href="/gameInfo?id=$game.id">$game.title [$game.system]</a></b> 
-                        <br />
-                        <b>Release Date:</b> $game.my_date.__str__() <br />
-                        
-                        #for $provider in $GAME_PROVIDERS.values():
-                        #set $info_id = $game.__dict__[$provider.xref_id_column]
-                        <a href="updateInfo?id=$game.id&site_id=$provider.site_id&info_id=$info_id" style="text-decoration:none">
-                            <button type="button">
-                                #if $info_id:
-                                    Update $provider.site_name
-                                #else:
-                                    Get $provider.site_name Info
-                                #end if
-                            </button>
-                        </a>
-                        #end for
-                        
-                        <a href="removeGame?id=$game.id" style="text-decoration:none">
-                            <button type="button">X</button>
-                        </a>
-                        <br />
-                        $game.summary
-                    </div>
+                    <table>
+                    <tr>
+                        <td width="300px">
+                            #set $score = $game.my_rating if $game.my_rating else "No Rating"
+                            <b><a href="/gameInfo?id=$game.id">$game.title [$game.system]</a></b> 
+                            <br />
+                            <b>Release Date:</b> $game.my_date <br />
+                            
+                            #if $game.publisher:
+                            <b>Publisher:</b>
+                            #if $game.publisher_link:
+                                <a href="$game.publisher_link">
+                                    $game.publisher
+                                </a>
+                            #else:
+                                $game.publisher
+                            #end if
+                            <br />
+                            #end if
+                            
+                            #if $game.developer:
+                            <b>Developer:</b>
+                            #if $game.developer_link:
+                                <a href="$game.developer_link">
+                                    $game.developer
+                                </a>
+                            #else:
+                                $game.developer
+                            #end if
+                            <br />
+                            #end if
+                            
+                            #if $game.esrb:
+                            <b>ESRB:</b> $game.esrb
+                            #if $game.esrb_reason:
+                                <span> for $game.esrb_reason</span>
+                            #end if
+                            <br />
+                            #end if
+                            
+                            #for $provider in $GAME_PROVIDERS.values():
+                                #set $info_id = $game.__dict__[$provider.xref_id_column]
+                                <a href="updateInfo?id=$game.id&site_id=$provider.site_id&info_id=$info_id" style="text-decoration:none">
+                                    #if $info_id:
+                                        <img src="/images/sites/$provider.favicon" />
+                                    #else:
+                                        <img src="/images/sites/$provider.favicon_blank" />
+                                    #end if
+                                </a>
+                            #end for
+                            
+                            <a href="removeGame?id=$game.id" style="text-decoration:none">
+                                <button type="button">X</button>
+                            </a>
+                            <br />
+                        </td>
+                        <td valign="top" style="padding-left:15px">
+                            <div style="overflow-y:auto">
+                                $game.summary
+                            </div>
+                        </td>
+                    </tr>
+                    </table>
                 </td>
             </tr>
             </table>

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import cherrypy.lib.auth_basic
-import os.path
+import os
 
 import shutil
 
@@ -16,7 +16,7 @@ def initWebServer(options = {}):
         options.setdefault('username',    '')
         options.setdefault('password',    '')
         options.setdefault('web_root',   '/')
-        options.setdefault('data_root',   './')
+        options.setdefault('data_root',   os.path.join(os.getcwd(), 'data'))
         assert isinstance(options['port'], int)
         assert 'data_root' in options
 

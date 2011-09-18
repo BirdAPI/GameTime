@@ -12,6 +12,7 @@ class IGNProvider(GameProvider):
         self.search_tmpl = "searchIGN.tmpl"
         self.info_tmpl = "ignInfo.tmpl"
         self.favicon = "ign.png"
+        self.favicon_blank = "ign_blank.png"
         self.xref_id_column = "ign_id"
         
     def search(self, query, *args, **kwargs):
