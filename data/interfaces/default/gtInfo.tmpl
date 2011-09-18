@@ -11,7 +11,7 @@
                     <tr><th>System:</th><td>$gt.system</td></tr>
                     <tr><th>Release Date:</th><td>$gt.release_date</td></tr>
                     #set $score = $gt.gt_score if $gt.gt_score else "No Rating"
-                    <tr><th>GameTrailers Score:</th><td>$score</td></tr>
+                    <tr><th>GT Score:</th><td>$score</td></tr>
                     #set $user = "%s  (%s Votes)" % ($gt.user_score,$gt.user_count) if $gt.user_score else "No Rating"
                     <tr><th>User Score:</th><td>$user</td></tr>
                     #set $esrb = $gt.esrb + " - " + $gt.esrb_reason if $gt.esrb_reason else $gt.esrb

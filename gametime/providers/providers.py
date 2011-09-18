@@ -10,9 +10,12 @@ class GameProvider:
         self.search_tmpl = None
         self.info_tmpl = None
         self.favicon = None
+        # The column in MyGame that points to this provider: MyGame.thisprovider_id
         self.xref_id_column = None
         self.id_column = "id"
         self.ignore_list = []
+        # MultiSystem is a provider that uses the same id for the same game on different systems
+        self.is_multi_system = False
         
     """
     Returns a list of search results
@@ -30,9 +33,7 @@ class GameProvider:
     Given an id, retreive the GameInfo object from the internet
     """
     def get_info(self, game_id, info_id):
-        return None        
-        
-        
+        return None
     
     """
     Perform a search and match the search result, then return the game info id
@@ -42,7 +43,8 @@ class GameProvider:
         system_norm = normalize_system(system)
         results = self.search(title)
         for result in results:
-            if normalize_system(self.get_system(result)) == system_norm:
+            systems = [ normalize_system(system) for system in self.get_systems(result) ]
+            if system_norm in systems:
                 if normalize_game_title(self.get_title(result)) == title_norm:
                     return self.get_id(result)
         return None
@@ -88,9 +90,11 @@ class GameProvider:
         return info.summary        
     def get_release_date(self, info):
         return info.release_date
-        
-        
-
+    def get_systems(self, info):
+        return info.systems if self.is_multi_system else [ info.system ]
+    
+    
+    
 
 def normalize_system(system):
     s = system.lower()

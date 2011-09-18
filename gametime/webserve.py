@@ -46,7 +46,7 @@ class WebInterface:
         t.game = game
 
         for provider in GAME_PROVIDERS.values():
-            t.__dict__[provider.site_id] = provider.get_one(game.__dict__[provider.xref_id_column])
+            t.__dict__[provider.site_id] = provider.get_one(game.get_provider_id(provider))
             
         return munge(t)
     
@@ -57,10 +57,10 @@ class WebInterface:
         game.system = providers.normalize_system(system)
         if site_id in GAME_PROVIDERS.keys():
             provider = GAME_PROVIDERS[site_id]
-            game.__dict__[provider.xref_id_column] = info_id
+            game.set_provider_id(provider, info_id)
             game.insert_in_db()
             self.updateInfo(game.id, site_id, info_id, False)
-        raise cherrypy.HTTPRedirect("/")
+        raise cherrypy.HTTPRedirect("/#Game_{0}".format(game.id))
     
     @cherrypy.expose
     def removeGame(self, id):
@@ -79,9 +79,9 @@ class WebInterface:
     def updateGame(self, id, redirect=True):
         game = MyGame.get(id)
         for provider in GAME_PROVIDERS.values():
-            self.updateInfo(id, provider.site_id, game.__dict__[provider.xref_id_column], False)
+            self.updateInfo(id, provider.site_id, game.get_provider_id(provider), False)
         if redirect:
-            raise cherrypy.HTTPRedirect("/")
+            raise cherrypy.HTTPRedirect("/#Game_{0}".format(id))
         
     @cherrypy.expose
     def updateInfo(self, id, site_id, info_id=None, redirect=True):
@@ -97,10 +97,10 @@ class WebInterface:
                         pprint(vars(info))
                         print ""
                         provider.insert_or_update_in_db(info)
-                        game.__dict__[provider.xref_id_column] = info_id
+                        game.set_provider_id(provider, info_id)
                         game.update_info(provider, info)
         if redirect:
-            raise cherrypy.HTTPRedirect("/")
+            raise cherrypy.HTTPRedirect("/#Game_{0}".format(id))
     
     @cherrypy.expose
     def verifyStealth(self):
