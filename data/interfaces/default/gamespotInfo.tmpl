@@ -1,0 +1,30 @@
+
+<div class="gamespot_info">
+    <table>
+        <tr>
+            <td>
+                <a href="$gamespot.link"><img src="$gamespot.boxart" width="125" /></a>
+            </td>
+            <td>
+                <table>
+                    <tr><th>Title:</th><td><a href="$gamespot.link"><b>$gamespot.title</b></a></td></tr>
+                    <tr><th>System:</th><td>$gamespot.system</td></tr>
+                    <tr><th>Release Date:</th><td>$gamespot.release_date</td></tr>
+                    #set $score = "%s  -  %s" % ($gamespot.score,$gamespot.score_desc) if $gamespot.score else "No Rating"
+                    <tr><th>Gamespot Score:</th><td>$score</td></tr>
+                    #set $critic = "%s  (%s Reviews)" % ($gamespot.critic_score,$gamespot.critic_count) if $gamespot.critic_score else "No Rating"
+                    <tr><th>Critic Score:</th><td>$critic</td></tr>
+                    #set $user = "%s  (%s Votes)" % ($gamespot.user_score,$gamespot.user_count) if $gamespot.user_score else "No Rating"
+                    <tr><th>User Score:</th><td>$user</td></tr>
+                    #set $esrb = $gamespot.esrb + " - " + $gamespot.esrb_reason if $gamespot.esrb_reason else $gamespot.esrb
+                    <tr><th>ESRB:</th><td>$esrb</td></tr>
+                    <tr><th>Publisher:</th><td>$gamespot.publisher</td></tr>
+                    <tr><th>Developer:</th><td>$gamespot.developer</td></tr>
+                    <tr><th>Genre:</th><td>$gamespot.genre</td></tr>
+                    <tr><th>Summary:</th><td>$gamespot.summary</td></tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</div>
+

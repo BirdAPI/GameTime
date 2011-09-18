@@ -1,0 +1,25 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<body>
+<ul style="list-style-type:none">
+#for $result in $results
+    <li>
+        <div>
+            #set $score = (int($result.metascore) / 10.0) if $result.metascore else "No Rating"
+            <a href="$result.link">
+                $result.title [$result.system] - $score
+            </a>
+            <a href="addGame?title=$result.title&system=$result.system&info_id=$result.id&site_id=$site_id"><button>Add Game</button></a>
+            <br />
+            <b>Release Date: </b>$result.release_date
+            <br />
+            $result.summary
+        </div>
+        <br />
+    </li>
+    <br />
+#end for
+</ul>
+
+</body>
+</html>

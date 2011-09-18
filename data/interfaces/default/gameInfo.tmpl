@@ -1,0 +1,59 @@
+#import gametime
+#import gametime.providers
+#from gametime.providers import providers, GAME_PROVIDERS
+
+<html>
+<head>
+<title>$game.title - [$game.system] </title>
+<link rel="stylesheet" href="http://static.jquery.com/ui/css/base2.css" type="text/css" media="all" /> 
+<link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/ui-lightness/jquery-ui.css" type="text/css" media="all" /> 
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script> 
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js" type="text/javascript"></script> 
+</head>
+<body>
+
+<script>
+	$ (function() {
+		$ ( "#tabs" ).tabs();
+	});
+</script>
+
+<style type="text/css">
+    th {
+        width: 125px;
+        text-align: right;
+        vertical-align: top;
+        /*border: 1px solid black;*/
+    }
+    
+    td {
+        text-align: left;
+        vertical-align: top;
+        /*border: 1px solid black;*/
+    }
+</style>
+
+<div>
+    <div id="tabs">
+        <ul class="tabs">
+            #for $provider in $GAME_PROVIDERS.values():
+            #if $__dict__[$provider.site_id]:
+            <li><a href="#info_$provider.site_id">$provider.site_name</a></li>
+            #end if
+            #end for
+        </ul>
+        
+        #for $provider in $GAME_PROVIDERS.values():
+        #if $__dict__[$provider.site_id]:
+        <div id="info_$provider.site_id">
+        #include $os.path.join($gametime.TMPL_DIR, $provider.info_tmpl)
+        </div>
+        #end if
+        #end for
+        
+    </div>
+</div>
+
+</body>
+</html>
+

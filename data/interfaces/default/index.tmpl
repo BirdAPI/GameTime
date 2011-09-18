@@ -1,5 +1,8 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 #import gametime
+#import gametime.providers
+#from gametime.providers import providers, GAME_PROVIDERS
+
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <title>GameTime - My Games</title>
@@ -13,11 +16,10 @@
 
 <form name="queryForm" action="search">
     <input type="text" name="query" size="75px"/>
-    <select name="site">
-        <option value="gametrailers">GameTrailers</option>
-        <option value="gamespot">Gamespot</option>
-        <option value="metacritic">Metacritic</option>
-        <option value="ign">IGN</option>
+    <select name="site_id">
+        #for $provider in $GAME_PROVIDERS.values():
+        <option value="$provider.site_id">$provider.site_name</option>
+        #end for
     </select>
     <input type="submit" value="Search" />
 </form>
@@ -42,42 +44,20 @@
                         <b><a href="/gameInfo?id=$game.id">$game.title [$game.system]</a></b> 
                         <br />
                         <b>Release Date:</b> $game.my_date.__str__() <br />
-                        <a href="updateMetacriticInfo?id=$game.id&metacritic_id=$game.metacritic_id" style="text-decoration:none">
+                        
+                        #for $provider in $GAME_PROVIDERS.values():
+                        #set $info_id = $game.__dict__[$provider.xref_id_column]
+                        <a href="updateInfo?id=$game.id&site_id=$provider.site_id&info_id=$info_id" style="text-decoration:none">
                             <button type="button">
-                                #if $game.metacritic_id:
-                                    Update Metacritic
+                                #if $info_id:
+                                    Update $provider.site_name
                                 #else:
-                                    Get Metacritic Info
+                                    Get $provider.site_name Info
                                 #end if
                             </button>
                         </a>
-                        <a href="updateIGNInfo?id=$game.id&ign_id=$game.ign_id" style="text-decoration:none">
-                            <button type="button">
-                                #if $game.ign_id:
-                                    Update IGN
-                                #else:
-                                    Get IGN Info
-                                #end if
-                            </button>
-                        </a>
-                        <a href="updateGamespotInfo?id=$game.id&gamespot_id=$game.gamespot_id" style="text-decoration:none">
-                            <button type="button">
-                                #if $game.gamespot_id:
-                                    Update Gamespot
-                                #else:
-                                    Get Gamespot Info
-                                #end if
-                            </button>
-                        </a>
-                        <a href="updateGTInfo?id=$game.id&gametrailers_id=$game.gametrailers_id" style="text-decoration:none">
-                            <button type="button">
-                                #if $game.gametrailers_id:
-                                    Update GameTrailers
-                                #else:
-                                    Get GameTrailers Info
-                                #end if
-                            </button>
-                        </a>
+                        #end for
+                        
                         <a href="removeGame?id=$game.id" style="text-decoration:none">
                             <button type="button">X</button>
                         </a>

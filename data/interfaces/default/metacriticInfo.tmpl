@@ -1,0 +1,31 @@
+
+<div class="metacritic_info">
+    <table>
+        <tr>
+            <td>
+                <a href="$metacritic.link"><img src="$metacritic.boxart" width="125" /></a>
+            </td>
+            <td>
+                <table>
+                    <tr><th>Title:</th><td><a href="$metacritic.link"><b>$metacritic.title</b></a></td></tr>
+                    <tr><th>System:</th><td>$metacritic.system</td></tr>
+                    <tr><th>Release Date:</th><td>$metacritic.release_date</td></tr>
+                    #set $metascore = "%s  (%s Reviews) - %s" % ($metacritic.metascore,$metacritic.metascore_count,$metacritic.metascore_desc) if $metacritic.metascore else "No Rating"
+                    <tr><th>Metascore:</th><td>$metascore</td></tr>
+                    #set $userscore = "%s  (%s Votes) - %s" % ($metacritic.user_score,$metacritic.user_count,$metacritic.user_score_desc) if $metacritic.user_score else "No Rating"
+                    <tr><th>User Score:</th><td>$userscore</td></tr>
+                    <tr><th>ESRB:</th><td>$metacritic.esrb</td></tr>
+                    <tr><th>Publisher:</th><td><a href="$metacritic.publisher_link">$metacritic.publisher</a></td></tr>
+                    <tr><th>Developer:</th><td>$metacritic.developer</td></tr>
+                    <tr><th>Official Site:</th><td><a href="$metacritic.official_site">$metacritic.official_site</a></td></tr>
+                    <tr><th>Genres:</th><td>$metacritic.genres</td></tr>
+                    <tr><th>Summary:</th><td>$metacritic.summary</td></tr>
+                </table>
+            </td>
+        </tr>
+    </table> 
+</div>
+
+
+
+

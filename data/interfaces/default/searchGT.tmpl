@@ -1,0 +1,42 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<body>
+<ul style="list-style-type:none">
+#for $result in $results
+    <li>
+        <table>
+        <tr>
+            <td>
+                <a href="$result.link">
+                    #if $result.boxart:
+                        <img src="$result.boxart" width="75px" />
+                    #end if
+                </a>
+            </td>
+            <td valign="top" style="padding-left:15px">
+                <a href="$result.link">
+                    #set $score = "{0} ({1} Votes)".format($result.score, $result.votes) if $result.score else "No Rating"
+                    $result.title - $score
+                </a>
+                #for $system in $result.systems:
+                <a href="addGame?title=$result.title&system=$system&info_id=$result.id&site_id=$site_id"><button>Add Game ($system)</button></a>
+                #end for
+                <br />
+                <b>Release Date:</b> $result.release_date <br />
+                #if $result.genres:
+                <b>Genres:</b> $result.genres <br />
+                #end if
+                #if $result.developer:
+                <b>Developer:</b> <a href="$result.developer_link">$result.developer</a> <br />
+                #end if
+                #if $result.publisher:
+                <b>Publisher:</b> <a href="$result.publisher_link">$result.publisher</a> <br />
+                #end if
+            </td>
+    </li>
+    <br />
+#end for
+</ul>
+
+</body>
+</html>

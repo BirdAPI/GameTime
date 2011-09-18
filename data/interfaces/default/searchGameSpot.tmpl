@@ -1,0 +1,33 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<body>
+<ul style="list-style-type:none">
+#for $result in $results
+    <li>
+        <table>
+        <tr>
+            <td>
+                <a href="$result.link">
+                    #if $result.boxart:
+                        <img src="$result.boxart" width="75px" />
+                    #end if
+                </a>
+            </td>
+            <td valign="top" style="padding-left:15px">
+                <a href="$result.link">
+                    #set $score = $result.score if $result.score else "No Rating"
+                    $result.title [$result.system] - $score
+                </a>
+                <a href="addGame?title=$result.title&system=$result.system&info_id=$result.id&site_id=$site_id"><button>Add Game</button></a>
+                <br />
+                <b>Release Date: </b>$result.release_date
+                <br />
+                $result.summary
+            </td>
+    </li>
+    <br />
+#end for
+</ul>
+
+</body>
+</html>

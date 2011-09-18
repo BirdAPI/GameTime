@@ -1,0 +1,47 @@
+
+<div class="ign_info">
+    <table>
+        <tr>
+            <td>
+                <a href="$ign.link"><img src="$ign.boxart" width="125" /></a>
+            </td>
+            <td>
+                <table>
+                    <tr><th>Title:</th><td><a href="$ign.link"><b>$ign.title</b></a></td></tr>
+                    <tr><th>System:</th><td>$ign.system</td></tr>
+                    <tr><th>Release Date:</th><td>$ign.release_date</td></tr>
+                    #set $score = $ign.ign_score if $ign.ign_score else "No Rating"
+                    <tr><th>IGN Score:</th><td>$score</td></tr>
+                    #set $press = "%s  (%s Reviews)" % ($ign.press_score,$ign.press_count) if $ign.press_score else "No Rating"
+                    <tr><th>Press Score:</th><td>$press</td></tr>
+                    #set $reader = "%s  (%s Votes)" % ($ign.reader_score,$ign.reader_count) if $ign.reader_score else "No Rating"
+                    <tr><th>Reader Score:</th><td>$reader</td></tr>
+                    #set $esrb = $ign.esrb_rating + " - " + $ign.esrb_reason if $ign.esrb_reason else $ign.esrb_rating
+                    <tr><th>ESRB:</th><td>$esrb</td></tr>
+                    <tr><th>Publisher:</th><td>$ign.publisher</td></tr>
+                    <tr><th>Developer:</th><td>$ign.developer</td></tr>
+                    <tr><th>Genre:</th><td>$ign.genre</td></tr>
+                    <tr><th>Also On:</th><td>$ign.also_on</td></tr>
+                    <tr><th>MSRP:</th><td>$ign.msrp</td></tr>
+                    <tr><th>Review Links:</th><td>
+                        #if $ign.video_review
+                            <a href="$ign.video_review">Video Review</a>
+                        #end if
+                        #if $ign.text_review
+                            <a href="$ign.text_review">Text Review</a>
+                        #end if
+                        </td></tr>
+                    <tr><th>Summary:</th><td>$ign.summary</td></tr>
+                    <tr>
+                        <th>Thumbnails:</th>
+                        <td>
+                            <img src="$ign.thumbnail" height="150"/>
+                            <img src="$ign.highlight_image" height="150"/>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</div>
+
