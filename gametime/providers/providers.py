@@ -137,23 +137,39 @@ def try_get(obj, *attr_names):
     return None
 
 def normalize_system(system):
+    if not system:
+        return None
     s = system.lower().replace("-", "").replace("_", "").replace(" ", "")
     if s in ["x360", "xbox360", "xb360"]:
         return "Xbox 360"
     elif s in ["ps3", "playstation3"]:
         return "PS3"
-    elif s in ["wii"]:
+    elif s in ["wii", "nintendowii"]:
         return "Wii"
     elif s in ["psp", "playstationportable"]:
         return "PSP"
-    elif s in ["ds"]:
+    elif s in ["ds", "nintendods"]:
         return "DS"
+    elif s in ["3ds", "nintendo3ds"]:
+        return "3DS"
     elif s in ["ps", "ps1", "playstation1"]:
         return "PS1"
     elif s in ["ps2", "playstation2"]:
         return "PS2"
     elif s in ["pc", "computer", "personalcomputer"]:
         return "PC"
+    elif s in ["psvita", "vita", "playstationvita"]:
+        return "PS Vita"
+    elif s in ["nes", "nintendo", "nintendoentertainmentsystem"]:
+        return "NES"
+    elif s in ["snes", "supernintendo", "supernes"]:
+        return "SNES"
+    elif s in ["wiiware", "wiishop"]:
+        return "Wii Ware"
+    elif s in ["playstationnetwork", "psn"] or s.startswith("playstationnetwork"):
+        return "PSN"
+    elif s in ["xbl", "xboxlive", "xblarcade", "xboxlivearcade"]:
+        return "XBL Arcade"
     else:
         return system
         
@@ -186,12 +202,13 @@ TITLE_REPLACES = {
                     "'" : ""
                    }
 
-def normalize_game_title(title):
+def normalize_game_title(title, echo=True):
     if not title:
         return None
     res = title
     for (key, value) in TITLE_REPLACES.items():
         res = re.sub(key, value, res)
     res = res.replace(" ", "").lower()
-    print title, "->", res
+    if echo:
+        print title, "->", res
     return res

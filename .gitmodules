@@ -13,3 +13,6 @@
 [submodule "gametrailers"]
 	path = gametrailers
 	url = git@github.com:BirdAPI/GameTrailers-Scraper-API.git
+[submodule "GiantBomb"]
+	path = GiantBomb
+	url = git@github.com:BirdAPI/GiantBomb.git

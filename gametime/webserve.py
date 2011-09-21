@@ -35,6 +35,7 @@ class WebInterface:
             provider = GAME_PROVIDERS[site_id]
             t = Template(open(os.path.join(gametime.TMPL_DIR, provider.search_tmpl)).read())
             t.results = provider.search(query)
+            t.provider = provider
             t.site_id = site_id
             return munge(t)
         return None

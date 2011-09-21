@@ -1,12 +1,17 @@
 import gametime
 import sqlite3
+import types
 
 def get_generic(new_object, row, include_extras=False):
     if row:
         for index, value in enumerate(row):
             key = row.keys()[index]
             if include_extras or key in new_object.__dict__:
-                new_object.__dict__[key] = value
+                if isinstance(value, types.StringTypes) and value.startswith("LIST:"):
+                    val = value[len("LIST:"):]
+                    new_object.__dict__[key] = [ token.strip() for token in val.split(",") ]
+                else:
+                    new_object.__dict__[key] = value
     return new_object
 
 def delete(id_value, id_column, filename, table_name):
@@ -28,7 +33,10 @@ def insert_generic(object, filename, table_name, provider=None, replace_into=Fal
     for key, value in vars(object).items():
         if value and (provider is None or not key in provider.ignore_list):
             keys.append(key)
-            values.append(value)
+            if isinstance(value, types.ListType):
+                values.append("LIST:" + ",".join(value))
+            else:
+                values.append(value)
             if columns_str:
                 columns_str = "{0},[{1}]".format(columns_str, key)
             else:
@@ -49,7 +57,10 @@ def update_generic(object, filename, table_name, provider=None):
     for key, value in vars(object).items():
         if value and (provider is None or not key in provider.ignore_list):
             keys.append(key)
-            values.append(value)
+            if isinstance(value, types.ListType):
+                values.append("LIST:" + ",".join(value))
+            else:
+                values.append(value)
             if set_str:
                 set_str = "{0},[{1}]=?".format(set_str, key)
             else:
