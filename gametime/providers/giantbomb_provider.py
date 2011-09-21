@@ -49,7 +49,7 @@ class GiantBombInfo:
         self.summary = gb.deck
         self.boxart = gb.image.thumb if gb.image else None
         self.link = gb.site_detail_url
-        self.release_date = gb.original_release_date
+        self.release_date = gb.original_release_date.replace(" 00:00:00", "") if gb.original_release_date else None
         self.system = system
         self.systems = [normalize_system(p.name) for p in gb.platforms]
         

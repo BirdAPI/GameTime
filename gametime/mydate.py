@@ -37,8 +37,12 @@ class MyDate:
         dt = MyDate.__try_convert_date__(date_str, "%m/%d/%Y")
         if dt:
             return self.initialize_from_datetime(dt)
+        
+        dt = MyDate.__try_convert_date__(date_str, "%m/%d/%Y")
+        if dt:
+            return self.initialize_from_datetime(dt)
             
-        dt = MyDate.__try_convert_date__(date_str, "%m/%d/%y")
+        dt = MyDate.__try_convert_date__(date_str, "%Y-%m-%d")
         if dt:
             return self.initialize_from_datetime(dt)
 
