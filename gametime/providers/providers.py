@@ -148,9 +148,9 @@ def normalize_system(system):
         return "Wii"
     elif s in ["psp", "playstationportable"]:
         return "PSP"
-    elif s in ["ds", "nintendods"]:
+    elif s in ["ds", "nintendods", "nds"]:
         return "DS"
-    elif s in ["3ds", "nintendo3ds"]:
+    elif s in ["3ds", "nintendo3ds", "n3ds"]:
         return "3DS"
     elif s in ["ps", "ps1", "playstation1"]:
         return "PS1"
