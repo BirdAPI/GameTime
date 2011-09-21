@@ -1,7 +1,7 @@
 GameTime (working title)
 =====
 
-#*CURRENTLY SEEKING PYTHON AND WEB DEVELOPERS. IF YOU ARE INTERESTED IN CONTRIBUTING, PLEASE CONTACT ME*#
+__Currently seeking Python and Web Developers. If you are interested in contributing, please contact me at birdapi@gmail.com__
 
 *This software is Pre-Alpha.  The game scraping and management is somewhat working, however there is no progress on the downloading portion* 
 
