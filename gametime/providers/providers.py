@@ -1,8 +1,8 @@
 import gametime
 import gametime.db as db
-import re
+from functions import *
 
-class GameProvider:
+class GameProvider:   
     def __init__(self):
         self.site_id = None
         self.site_name = None
@@ -13,7 +13,9 @@ class GameProvider:
         self.favicon_blank = None
         # The column in MyGame that points to this provider: MyGame.thisprovider_id
         self.xref_id_column = None
+        # The column in theis provider's info table that describes the id
         self.id_column = "id"
+        # Class variables to ignore when dumping to database
         self.ignore_list = []
         # MultiSystem is a provider that uses the same id for the same game on different systems
         self.is_multi_system = False
@@ -80,135 +82,48 @@ class GameProvider:
     These should only need to be overriden if the provider isnt standardized
     """
     def get_id(self, info):
-        return try_get(info, "id")
+        return try_get_attr(info, "id")
     
     def get_link(self, info):
-        return try_get(info, "link", "info_link", "url", "info_url")
+        return try_get_attr(info, "link", "info_link", "url", "info_url")
     
     def get_boxart(self, info):
-        return try_get(info, "boxart")
+        return try_get_attr(info, "boxart")
     
     def get_title(self, info):
-        return try_get(info, "title", "name")
+        return try_get_attr(info, "title", "name")
     
     def get_system(self, info):
-        return try_get(info, "system", "platform") 
+        return try_get_attr(info, "system", "platform") 
         
     def get_summary(self, info):
-        return try_get(info, "summary", "description", "deck") 
+        return try_get_attr(info, "summary", "description", "deck") 
     
     def get_release_date(self, info):
-        return try_get(info, "release_date", "release_date_text", "original_release_date")
+        return try_get_attr(info, "release_date", "release_date_text", "original_release_date")
     
     def get_esrb(self, info):
-        return try_get(info, "esrb", "esrb_rating")
+        return try_get_attr(info, "esrb", "esrb_rating")
     
     def get_esrb_reason(self, info):
-        return try_get(info, "esrb_reason")
+        return try_get_attr(info, "esrb_reason")
     
     def get_developer(self, info):
-        return try_get(info, "developer", "dev")
+        return try_get_attr(info, "developer", "dev")
     
     def get_publisher(self, info):
-        return try_get(info, "publisher", "pub")
+        return try_get_attr(info, "publisher", "pub")
     
     def get_developer_link(self, info):
-        return try_get(info, "developer_link", "dev_link")
+        return try_get_attr(info, "developer_link", "dev_link")
     
     def get_publisher_link(self, info):
-        return try_get(info, "publisher_link", "pub_link")
+        return try_get_attr(info, "publisher_link", "pub_link")
     
     def get_official_site(self, info):
-        return try_get(info, "official_site", "official_url", "official_link")
+        return try_get_attr(info, "official_site", "official_url", "official_link")
     
     def get_systems(self, info):
-        systems = try_get(info, "systems", "platforms")
+        systems = try_get_attr(info, "systems", "platforms")
         return systems if systems else [ self.get_system(info) ]
-
-
-
     
-def try_get(obj, *attr_names):
-    for attr in attr_names:
-        try:
-            return obj.__dict__[attr]
-        except KeyError:
-            pass
-    return None
-
-def normalize_system(system):
-    if not system:
-        return None
-    s = system.lower().replace("-", "").replace("_", "").replace(" ", "")
-    if s in ["x360", "xbox360", "xb360"]:
-        return "Xbox 360"
-    elif s in ["ps3", "playstation3"]:
-        return "PS3"
-    elif s in ["wii", "nintendowii"]:
-        return "Wii"
-    elif s in ["psp", "playstationportable"]:
-        return "PSP"
-    elif s in ["ds", "nintendods", "nds"]:
-        return "DS"
-    elif s in ["3ds", "nintendo3ds", "n3ds"]:
-        return "3DS"
-    elif s in ["ps", "ps1", "playstation1"]:
-        return "PS1"
-    elif s in ["ps2", "playstation2"]:
-        return "PS2"
-    elif s in ["pc", "computer", "personalcomputer"]:
-        return "PC"
-    elif s in ["psvita", "vita", "playstationvita"]:
-        return "PS Vita"
-    elif s in ["nes", "nintendo", "nintendoentertainmentsystem"]:
-        return "NES"
-    elif s in ["snes", "supernintendo", "supernes"]:
-        return "SNES"
-    elif s in ["wiiware", "wiishop"]:
-        return "Wii Ware"
-    elif s in ["playstationnetwork", "psn"] or s.startswith("playstationnetwork"):
-        return "PSN"
-    elif s in ["xbl", "xboxlive", "xblarcade", "xboxlivearcade"]:
-        return "XBL Arcade"
-    else:
-        return system
-        
-TITLE_REPLACES = { 
-                    ":" : "",
-                    "," : "",
-                    "\." : "",
-                    "_" : "",
-                    "-" : "",
-                    "\+" : "",
-                    " XIII( |$)" : "13",
-                    " VIII( |$)" : "8",
-                    " VII( |$)" : "7",
-                    " XII( |$)" : "12",
-                    " XIV( |$)" : "14",
-                    " XV( |$)" : "15",
-                    " III( |$)" : "3",
-                    " IV( |$)" : "4",
-                    " V( |$)" : "5",
-                    " VI( |$)" : "6",
-                    " II( |$)" : "2",
-                    " IX( |$)" : "9",
-                    " XI( |$)" : "11",
-                    " X( |$)" : "10",
-                    "(^T| t)he " : "",
-                    " of " : "",
-                    " and " : "",
-                    " a " : "",
-                    "A " : "",
-                    "'" : ""
-                   }
-
-def normalize_game_title(title, echo=True):
-    if not title:
-        return None
-    res = title
-    for (key, value) in TITLE_REPLACES.items():
-        res = re.sub(key, value, res)
-    res = res.replace(" ", "").lower()
-    if echo:
-        print title, "->", res
-    return res

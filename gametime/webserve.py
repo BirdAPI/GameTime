@@ -17,7 +17,7 @@ from abgx360 import abgx360
 from mydate import MyDate
 from mygame import MyGame
 import providers
-from providers import providers, GAME_PROVIDERS
+from providers import *
 
 class WebInterface:
 

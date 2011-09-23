@@ -1,3 +1,6 @@
+from constants import *
+import providers
+
 import ign_provider as ign
 import gamespot_provider as gamespot
 import gametrailers_provider as gametrailers
@@ -20,4 +23,3 @@ GAME_PROVIDERS[METACRITIC_PROVIDER.site_id] = METACRITIC_PROVIDER
 
 GIANTBOMB_PROVIDER = giantbomb.provider
 GAME_PROVIDERS[GIANTBOMB_PROVIDER.site_id] = GIANTBOMB_PROVIDER
-
